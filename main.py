@@ -34,9 +34,9 @@ def try_change_wallpaper():
     time_sunset = astral_sun["sunset"]
     time_sunset += datetime.timedelta(hours=1, minutes=0)
 
-    # left in case daylight saving plays a part
-    #if not time.localtime().tm_isdst:
-        #time_sunset += datetime.timedelta(hours=1, minutes=0)
+    # adjust for daylight saving
+    if time.localtime().tm_isdst:
+        time_sunset += datetime.timedelta(hours=1, minutes=0)
 
     t1 = time_sunset - datetime.timedelta(hours=0, minutes=30)
     change_time_sunset = datetime.datetime(t1.year, t1.month, t1.day, t1.hour, t1.minute, t1.second)
