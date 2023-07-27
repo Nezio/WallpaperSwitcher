@@ -3,13 +3,33 @@ from astral import LocationInfo
 from astral.sun import sun
 import time
 import ctypes
+import os
 
-# wallpaper paths (format e.g.: "D:\\My documents\\4 Pictures\\Wallpapers\\Other\\Hogwarts artwork 1 - day.png")
-wallpaper_day = "D:\\My documents\\4 Pictures\\Wallpapers\\Other\\Hogwarts artwork 1 - day.png"
-wallpaper_sunset = "D:\\My documents\\4 Pictures\\Wallpapers\\Other\\Hogwarts artwork 2 - sunset.png"
-wallpaper_night = "D:\\My documents\\4 Pictures\\Wallpapers\\Other\\Hogwarts artwork 3 - night.png"
+app_folder = os.getenv('LOCALAPPDATA') + "\\WallpaperSwitcher"
+log_file = os.path.join(app_folder, 'log.txt')
+wallpapers = {'day': None, 'sunset': None, 'night': None}
 
 def main():
+    if not os.path.exists(app_folder):
+        os.makedirs(app_folder)
+
+    # if the log file exists, delete it
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
+    # load wallpapers
+    for time_of_day in wallpapers.keys():
+        for ext in ['jpg', 'png']:
+            wallpaper_path = f'{app_folder}\\{time_of_day}.{ext}'
+            if os.path.exists(wallpaper_path):
+                wallpapers[time_of_day] = wallpaper_path
+                break
+            
+        if wallpapers[time_of_day] is None:
+            print_log(f'No {time_of_day} wallpaper found. Please put a .jpg or .png image named {time_of_day} in the folder {app_folder}.', "Error")
+        
+    if wallpapers["day"] is None or wallpapers["sunset"] is None or wallpapers["night"] is None:
+        return
     
     try_change_wallpaper()
 
@@ -18,10 +38,25 @@ def main():
 # Functions
 ##############################################################################################################################################
         
-def print_log(text, end="\n", include_timestamp=True):
-    if(include_timestamp):
-        print("[" + datetime.datetime.now().strftime("%Y.%m.%d. %H:%M:%S") + "]", end=" ")
-    print(text, end=end)
+def print_log(text, level="info"):
+    """Print a log to console and the log file.
+
+    Paramters:
+    text (string): message to print
+    level (string): Either "info", "warning" or "error". Can be ommited. Defaults to "info".
+    """
+
+    valid_levels = ["info", "warning", "error"]
+    if level.lower() not in valid_levels:
+        level = "info"
+    
+    level = "[" + level.upper() + "]"
+    timestamp = "[" + datetime.datetime.now().strftime("%Y.%m.%d. %H:%M:%S") + "]"
+    message = timestamp + " " + level + ": " + text
+
+    print(message, end="\n")
+    with open(log_file, 'a') as file:
+        file.write(message + "\n")
 
 def try_change_wallpaper():
     print_log("Starting wallpaper switcher")
@@ -47,7 +82,7 @@ def try_change_wallpaper():
     if time_now < change_time_sunset:
         print_log("It's day")
 
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpaper_day, 0)
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['day'], 0)
 
         wait_time = (change_time_sunset - time_now).total_seconds() + 5
         print_log("Wait time: " + str(wait_time))
@@ -57,7 +92,7 @@ def try_change_wallpaper():
     elif time_now >= change_time_sunset and time_now <= change_time_night:
         print_log("It's sunset")
 
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpaper_sunset, 0)
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['sunset'], 0)
 
         wait_time = (change_time_night - time_now).total_seconds() + 5
         print_log("Wait time: " + str(wait_time))
@@ -67,7 +102,7 @@ def try_change_wallpaper():
     else:
         print_log("It's night")
 
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpaper_night, 0)
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['night'], 0)
 
     
     print_log("Exiting wallpaper switcher")
