@@ -10,6 +10,8 @@ log_file = os.path.join(app_folder, 'log.txt')
 wallpapers = {'day': None, 'sunset': None, 'night': None}
 
 def main():
+    print_log("Starting wallpaper switcher...")
+
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
 
@@ -32,6 +34,8 @@ def main():
         return
     
     try_change_wallpaper()
+
+    print_log("Exiting wallpaper switcher...")
 
 
 ##############################################################################################################################################
@@ -59,7 +63,7 @@ def print_log(text, level="info"):
         file.write(message + "\n")
 
 def try_change_wallpaper():
-    print_log("Starting wallpaper switcher")
+    print_log("Starting wallpaper update")
 
     city = LocationInfo("Belgrade", "Serbia", "Europe/Belgrade", 44.8125, 20.4612)
     
@@ -80,7 +84,7 @@ def try_change_wallpaper():
     change_time_night = datetime.datetime(t2.year, t2.month, t2.day, t2.hour, t2.minute, t2.second)
 
     if time_now < change_time_sunset:
-        print_log("It's day")
+        print_log("It's day. Setting day wallpaper.")
 
         ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['day'], 0)
 
@@ -90,7 +94,7 @@ def try_change_wallpaper():
 
         try_change_wallpaper()
     elif time_now >= change_time_sunset and time_now <= change_time_night:
-        print_log("It's sunset")
+        print_log("It's sunset. Setting sunset wallpaper.")
 
         ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['sunset'], 0)
 
@@ -100,12 +104,9 @@ def try_change_wallpaper():
 
         try_change_wallpaper()
     else:
-        print_log("It's night")
+        print_log("It's night. Setting night wallpaper.")
 
         ctypes.windll.user32.SystemParametersInfoW(20, 0, wallpapers['night'], 0)
-
-    
-    print_log("Exiting wallpaper switcher")
 
 
 
